@@ -59,7 +59,7 @@ class AuthRepository(private val lastFmApi: LastFmApi, private val sessionManage
             // B. If user does NOT exist, fetch from API and Insert
             if (existingUser == null) {
                 Log.d("DEBUG", "User does not exist in Supabase, fetching from API")
-                fetchAndSaveUserInfo(username)
+                upsertUserFromApi(username)
             }
 
         } catch (e: Exception) {
@@ -68,7 +68,7 @@ class AuthRepository(private val lastFmApi: LastFmApi, private val sessionManage
         }
     }
 
-    private suspend fun fetchAndSaveUserInfo(username: String) {
+    public suspend fun upsertUserFromApi(username: String) {
         // Call Last.fm API
         val infoResponse = lastFmApi.getUserInfo(
             username = username,
@@ -89,13 +89,14 @@ class AuthRepository(private val lastFmApi: LastFmApi, private val sessionManage
         )
 
         // 3. Insert into Supabase
-        SupabaseClient.client.from("user_profiles").insert(profile)
+        SupabaseClient.client.from("user_profiles").upsert(profile) {
+            onConflict = "username" // Matches based on Primary Key
+        }
     }
 
     suspend fun getSavedSession(): Session? {
         val key = sessionManager.getSessionKey()
         val username = sessionManager.getUsername()
-        //AAAAAAAAAAAAAAAAA
         if (key != null && username != null) {
             // Reconstruct the Session object from local storage
             return Session(name = username, key = key, subscriber = 0)
