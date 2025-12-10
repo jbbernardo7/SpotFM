@@ -34,12 +34,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import pt.ismai.lastfmlogin.data.model.UserProfile
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileState
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     username: String,
+    showLogoutButton : Boolean,
     onLogout: () -> Unit,
     viewModel: ProfileViewModel = viewModel() // Get VM instance automatically
 ) {
@@ -61,6 +63,7 @@ fun ProfileScreen(
             is ProfileState.Success -> {
                 ProfileContent(
                     profile = state.profile,
+                    showLogoutButton = showLogoutButton,
                     onLogout = onLogout
                 )
             }
@@ -70,7 +73,8 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileContent(
-    profile: pt.ismai.lastfmlogin.data.model.UserProfile,
+    profile: UserProfile,
+    showLogoutButton : Boolean,
     onLogout: () -> Unit
 ) {
     Column(
@@ -163,6 +167,7 @@ fun ProfileContent(
 
         // Logout Button at the bottom
         Spacer(modifier = Modifier.height(8.dp))
+        if (showLogoutButton)
         Button(
             onClick = onLogout,
             modifier = Modifier.fillMaxWidth(),

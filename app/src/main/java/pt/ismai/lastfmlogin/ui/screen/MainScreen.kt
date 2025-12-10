@@ -45,7 +45,7 @@ fun MainScreen(username: String, onLogout: () -> Unit) {
 
             // TAB 4: Profile
             composable(BottomNavItem.Profile.route) {
-                ProfileScreen(username = username, onLogout = onLogout)
+                ProfileScreen(username = username, showLogoutButton = true, onLogout = onLogout)
             }
         }
     }
