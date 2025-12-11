@@ -38,12 +38,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import coil3.compose.AsyncImage
 import pt.ismai.lastfmlogin.data.model.UserProfile
-import pt.ismai.lastfmlogin.di.LocalAuthRepository
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileState
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
+import pt.ismai.lastfmlogin.LocalAppContainer
 
 @Composable
 fun ProfileScreen(
@@ -51,13 +51,13 @@ fun ProfileScreen(
     showLogoutButton : Boolean,
     onLogout: () -> Unit // Get VM instance automatically
 ) {
-    val repository = LocalAuthRepository.current
+    val appContainer = LocalAppContainer.current
 
     // 2. Create ViewModel using the clean DSL
     val viewModel: ProfileViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                ProfileViewModel(repository)
+                ProfileViewModel(appContainer.authRepository)
             }
         }
     )
