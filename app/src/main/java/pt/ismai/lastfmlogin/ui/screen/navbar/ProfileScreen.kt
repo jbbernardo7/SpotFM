@@ -21,6 +21,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,18 +34,34 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import coil3.compose.AsyncImage
 import pt.ismai.lastfmlogin.data.model.UserProfile
+import pt.ismai.lastfmlogin.di.LocalAuthRepository
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileState
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
 
 @Composable
 fun ProfileScreen(
     username: String,
     showLogoutButton : Boolean,
-    onLogout: () -> Unit,
-    viewModel: ProfileViewModel = viewModel() // Get VM instance automatically
+    onLogout: () -> Unit // Get VM instance automatically
 ) {
+    val repository = LocalAuthRepository.current
+
+    // 2. Create ViewModel using the clean DSL
+    val viewModel: ProfileViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                ProfileViewModel(repository)
+            }
+        }
+    )
+
     val state = viewModel.state
 
     // Fetch data when the screen opens
@@ -64,7 +81,8 @@ fun ProfileScreen(
                 ProfileContent(
                     profile = state.profile,
                     showLogoutButton = showLogoutButton,
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    onRefresh = { viewModel.refreshProfile(username) }
                 )
             }
         }
@@ -74,8 +92,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     profile: UserProfile,
-    showLogoutButton : Boolean,
-    onLogout: () -> Unit
+    showLogoutButton: Boolean,
+    onLogout: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -102,11 +121,25 @@ fun ProfileContent(
 
             // Names Column
             Column {
-                Text(
-                    text = profile.username,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = profile.username,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(
+                        onClick = onRefresh,
+                        modifier = Modifier.size(30.dp).padding(start = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Sync Info",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+
                 Text(
                     text = profile.real_name ?: "",
                     style = MaterialTheme.typography.bodyLarge,

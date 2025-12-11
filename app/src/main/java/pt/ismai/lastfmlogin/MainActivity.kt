@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.initializer
@@ -14,6 +15,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import pt.ismai.lastfmlogin.data.local.SessionManager
 import pt.ismai.lastfmlogin.data.network.RetrofitClient
 import pt.ismai.lastfmlogin.data.repository.AuthRepository
+import pt.ismai.lastfmlogin.di.LocalAuthRepository
 import pt.ismai.lastfmlogin.ui.theme.LastfmloginTheme
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthViewModel
 
@@ -31,7 +33,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LastfmloginTheme {
-                AppNavigation(viewModel)
+                CompositionLocalProvider(LocalAuthRepository provides repository) {
+                    AppNavigation(viewModel)
+                }
             }
         }
     }

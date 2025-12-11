@@ -10,6 +10,7 @@ import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
 import pt.ismai.lastfmlogin.data.model.UserProfile
 import pt.ismai.lastfmlogin.data.network.SupabaseClient
+import pt.ismai.lastfmlogin.data.repository.AuthRepository
 
 sealed class ProfileState {
     object Loading : ProfileState()
@@ -17,7 +18,7 @@ sealed class ProfileState {
     object Error : ProfileState()
 }
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(private val repository: AuthRepository) : ViewModel() {
     var state by mutableStateOf<ProfileState>(ProfileState.Loading)
         private set
 
@@ -41,6 +42,23 @@ class ProfileViewModel : ViewModel() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 state = ProfileState.Error
+            }
+        }
+    }
+
+    fun refreshProfile(username: String) {
+        viewModelScope.launch {
+            state = ProfileState.Loading
+
+            try {
+                // 1. Force API Update
+                repository.upsertUserFromApi(username)
+
+                // 2. Reload the UI with the new data from DB
+                fetchProfile(username)
+            } catch (e: Exception) {
+                // Handle error (maybe show a Snackbar)
+                e.printStackTrace()
             }
         }
     }

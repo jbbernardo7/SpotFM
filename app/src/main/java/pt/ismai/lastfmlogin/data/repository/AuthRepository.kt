@@ -68,7 +68,7 @@ class AuthRepository(private val lastFmApi: LastFmApi, private val sessionManage
         }
     }
 
-    public suspend fun upsertUserFromApi(username: String) {
+    suspend fun upsertUserFromApi(username: String) {
         // Call Last.fm API
         val infoResponse = lastFmApi.getUserInfo(
             username = username,
