@@ -7,10 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
-import pt.ismai.lastfmlogin.ui.screen.navbar.BottomNavItem
-import pt.ismai.lastfmlogin.ui.screen.navbar.BottomNavigationBar
-import pt.ismai.lastfmlogin.ui.screen.navbar.HomeScreen
-import pt.ismai.lastfmlogin.ui.screen.navbar.ProfileScreen
+import pt.ismai.lastfmlogin.ui.components.BottomNavItem
+import pt.ismai.lastfmlogin.ui.components.BottomNavigationBar
 
 @Composable
 fun MainScreen(username: String, onLogout: () -> Unit) {
@@ -33,9 +31,8 @@ fun MainScreen(username: String, onLogout: () -> Unit) {
                 HomeScreen(username)
             }
 
-            // TAB 2: Map
-            composable(BottomNavItem.Map.route) {
-                //MapScreen()
+            composable("map") {
+                MapScreen()
             }
 
             // TAB 3: Events
