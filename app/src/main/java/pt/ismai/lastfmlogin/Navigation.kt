@@ -6,8 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import pt.ismai.lastfmlogin.ui.screen.MainScreen
-import pt.ismai.lastfmlogin.ui.screen.LoginScreen
-import pt.ismai.lastfmlogin.ui.screen.SplashScreen
+import pt.ismai.lastfmlogin.ui.screen.auth.LoginScreen
+import pt.ismai.lastfmlogin.ui.screen.auth.SplashScreen
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthState
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthViewModel
 

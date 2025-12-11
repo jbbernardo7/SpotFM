@@ -1,4 +1,4 @@
-package pt.ismai.lastfmlogin.ui.screen
+package pt.ismai.lastfmlogin.ui.screen.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import pt.ismai.lastfmlogin.data.model.Session
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthState
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthViewModel
 

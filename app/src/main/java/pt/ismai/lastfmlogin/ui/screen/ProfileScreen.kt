@@ -1,4 +1,4 @@
-package pt.ismai.lastfmlogin.ui.screen.navbar
+package pt.ismai.lastfmlogin.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

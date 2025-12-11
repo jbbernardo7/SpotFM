@@ -1,4 +1,4 @@
-package pt.ismai.lastfmlogin.ui.screen.navbar
+package pt.ismai.lastfmlogin.ui.components
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import pt.ismai.lastfmlogin.ui.components.BottomNavItem
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {

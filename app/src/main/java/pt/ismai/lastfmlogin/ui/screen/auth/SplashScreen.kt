@@ -1,4 +1,4 @@
-package pt.ismai.lastfmlogin.ui.screen
+package pt.ismai.lastfmlogin.ui.screen.auth
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
