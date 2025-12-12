@@ -9,8 +9,9 @@ import androidx.lifecycle.viewModelScope
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
 import pt.ismai.lastfmlogin.data.model.UserProfile
-import pt.ismai.lastfmlogin.data.network.SupabaseClient
+import pt.ismai.lastfmlogin.data.network.Supabase
 import pt.ismai.lastfmlogin.data.repository.AuthRepository
+import pt.ismai.lastfmlogin.data.repository.UserRepository
 
 sealed class ProfileState {
     object Loading : ProfileState()
@@ -18,21 +19,14 @@ sealed class ProfileState {
     object Error : ProfileState()
 }
 
-class ProfileViewModel(private val repository: AuthRepository) : ViewModel() {
+class ProfileViewModel(private val repository: UserRepository) : ViewModel() {
     var state by mutableStateOf<ProfileState>(ProfileState.Loading)
         private set
 
     fun fetchProfile(username: String) {
         viewModelScope.launch {
             try {
-                // Fetch the full profile using the data class you created earlier
-                Log.d("DEBUG", "Fetching User Data from Database")
-                val profile = SupabaseClient.client
-                    .from("user_profiles")
-                    .select {
-                        filter { eq("username", username) }
-                    }
-                    .decodeSingleOrNull<UserProfile>()
+                val profile = repository.fetchUserProfileFromDatabase(username)
 
                 state = if (profile != null) {
                     ProfileState.Success(profile)
@@ -52,7 +46,7 @@ class ProfileViewModel(private val repository: AuthRepository) : ViewModel() {
 
             try {
                 // 1. Force API Update
-                repository.upsertUserFromApi(username)
+                repository.fetchAndUpsertUserProfile(username)
 
                 // 2. Reload the UI with the new data from DB
                 fetchProfile(username)

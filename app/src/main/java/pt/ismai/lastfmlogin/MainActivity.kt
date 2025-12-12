@@ -6,17 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import pt.ismai.lastfmlogin.data.local.SessionManager
-import pt.ismai.lastfmlogin.data.network.RetrofitClient
-import pt.ismai.lastfmlogin.data.repository.AuthRepository
 import pt.ismai.lastfmlogin.di.AppContainer
 import pt.ismai.lastfmlogin.di.DefaultAppContainer
 import pt.ismai.lastfmlogin.ui.theme.LastfmloginTheme
@@ -37,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalAppContainer provides appContainer) {
                     val viewModel: AuthViewModel by viewModels {
                         viewModelFactory {
-                            initializer { AuthViewModel(appContainer.authRepository) }
+                            initializer { AuthViewModel(appContainer.authRepository, appContainer.userRepository) }
                         }
                     }
 

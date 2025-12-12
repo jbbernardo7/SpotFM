@@ -57,7 +57,7 @@ fun ProfileScreen(
     val viewModel: ProfileViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                ProfileViewModel(appContainer.authRepository)
+                ProfileViewModel(appContainer.userRepository)
             }
         }
     )

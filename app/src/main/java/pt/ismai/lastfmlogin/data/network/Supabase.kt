@@ -4,7 +4,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import pt.ismai.lastfmlogin.utils.Constants
 
-object SupabaseClient {
+object Supabase {
     private const val SUPABASE_URL = Constants.SUPABASE_URL;
 
     private const val SUPABASE_KEY = Constants.SUPABASE_KEY;
