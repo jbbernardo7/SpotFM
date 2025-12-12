@@ -14,3 +14,7 @@ data class Session(
     @SerializedName("subscriber") val subscriber: Int
 )
 
+data class LastFmError(
+    val message: String?,
+    val error: Int?
+)

@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthState
 import pt.ismai.lastfmlogin.ui.viewmodel.AuthViewModel
@@ -27,7 +28,9 @@ fun LoginScreen(viewModel: AuthViewModel) {
     val state = viewModel.loginState
 
     Box(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         if (state is AuthState.Authenticating || state is AuthState.Authenticated) {
@@ -85,7 +88,13 @@ fun LoginForm(
         }
 
         if (errorMessage != null) {
-            Text(text = "Error: $errorMessage", color = Color.Red)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Error: $errorMessage",
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(0.7f)
+            )
         }
     }
 }

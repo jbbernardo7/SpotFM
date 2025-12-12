@@ -1,13 +1,18 @@
 package pt.ismai.lastfmlogin.ui.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import pt.ismai.lastfmlogin.data.model.LastFmError
 import pt.ismai.lastfmlogin.data.model.Session
 import pt.ismai.lastfmlogin.data.repository.AuthRepository
+import pt.ismai.lastfmlogin.data.repository.UserRepository
+import retrofit2.HttpException
 
 sealed class AuthState {
     object Unauthenticated : AuthState()
@@ -16,7 +21,7 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
-class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+class AuthViewModel(private val authRepository: AuthRepository,private val userRepository: UserRepository) : ViewModel() {
     var username by mutableStateOf("")
     var password by mutableStateOf("")
     var loginState by mutableStateOf<AuthState>(AuthState.Authenticating)
@@ -32,17 +37,26 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val session = repository.loginAndSaveSession(username, password)
+                val session = authRepository.fetchSessionFromLastFm(username, password)
+                authRepository.saveSession(session)
+
+                launch {
+                    userRepository.ensureUserProfileExists(username)
+                }
+
                 loginState = AuthState.Authenticated(session)
             } catch (e: Exception) {
-                loginState = AuthState.Error(e.message ?: "Login Error")
+                Log.d("DEBUG", "Login Error: ${e.message}")
+
+                val errorMsg = parseErrorMessage(e)
+                loginState = AuthState.Error(errorMsg)
             }
         }
     }
 
     fun checkLoginStatus() {
         viewModelScope.launch {
-            val savedSession = repository.getSavedSession()
+            val savedSession = authRepository.getSavedSession()
             if (savedSession != null) {
                 loginState = AuthState.Authenticated(savedSession)
             } else {
@@ -53,10 +67,26 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
     fun logout() {
         viewModelScope.launch {
-            repository.logout()
+            authRepository.logout()
             username = ""
             password = ""
             loginState = AuthState.Unauthenticated
         }
+    }
+
+    private fun parseErrorMessage(e: Exception): String {
+        if (e is HttpException) {
+            return try {
+                val errorBody = e.response()?.errorBody()?.string()
+                // Convert JSON to Object
+                val errorResponse = Gson().fromJson(errorBody, LastFmError::class.java)
+                // Return the clean message, or a fallback
+                errorResponse.message ?: "Authentication Failed (Unknown Reason)"
+            } catch (parseEx: Exception) {
+                "Error parsing server response"
+            }
+        }
+        // Handle standard network errors (Offline, Timeout)
+        return e.message ?: "An unknown error occurred"
     }
 }
