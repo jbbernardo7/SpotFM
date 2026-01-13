@@ -4,7 +4,9 @@ import android.util.Log
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.serialization.json.JsonObject
+import pt.ismai.lastfmlogin.data.model.Scrobble
 import pt.ismai.lastfmlogin.data.model.UserProfile
 import pt.ismai.lastfmlogin.data.network.LastFmApi
 import pt.ismai.lastfmlogin.data.network.Supabase
@@ -70,5 +72,96 @@ class UserRepository(
             .decodeSingleOrNull<UserProfile>()
 
         return profile
+    }
+
+    suspend fun refreshUserScrobbles(username: String) {
+        try {
+            // A. Fetch from Last.fm API
+            val response = lastFmApi.getRecentTracks(username = username, apiKey = Constants.API_KEY)
+            val apiTracks = response.recentTracks.tracks ?: emptyList()
+
+            // B. Map to Database Model
+            val scrobblesToInsert = apiTracks.map { track ->
+                // Handle "Now Playing" (it has no date, so we use current time or 0)
+                val timestamp = track.date?.uts?.toLongOrNull()
+                    ?: Long.MAX_VALUE
+
+                Scrobble(
+                    username = username,
+                    track_name = track.name,
+                    artist_name = track.artist.name,
+                    album_image = track.images?.lastOrNull()?.url?.takeIf { it.isNotBlank() },
+                    date_uts = timestamp
+                )
+            }
+
+            if (scrobblesToInsert.isNotEmpty()) {
+                // C. Delete OLD scrobbles for this user
+                supabaseClient.from("scrobbles").delete {
+                    filter {
+                        ilike("username", username)
+                    }
+                }
+
+                // D. Insert NEW scrobbles
+                supabaseClient.from("scrobbles").insert(scrobblesToInsert)
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e // Re-throw to handle it in ViewModel
+        }
+    }
+
+    suspend fun getUserScrobbles(username: String): List<Scrobble> {
+        return supabaseClient
+            .from("scrobbles")
+            .select {
+                filter { ilike("username", username) }
+                // Sort by date descending (Newest first)
+                // Note: Since we use Long.MAX_VALUE for "Now Playing", it will naturally be at the top.
+                order("date_uts", order = Order.DESCENDING)
+            }
+            .decodeList<Scrobble>()
+    }
+
+    suspend fun updateUserLocation(username: String, lat: Double, long: Double) {
+        try {
+            // Update the columns we added earlier
+            supabaseClient.from("user_profiles").update({
+                set("latitude", lat)
+                set("longitude", long)
+                set("last_active_at", System.currentTimeMillis()) // Mark as online now
+            }) {
+                filter { eq("username", username) } // Use the canonical username
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // 2. Get OTHER users to show on the map
+    suspend fun getActiveUsers(currentUsername: String): List<UserProfile> {
+        return try {
+            // Define "Active" as seen in the last 24 hours (86400000 ms)
+            // You can make this shorter (e.g., 10 mins) for a "Real Time" feel
+            val activeThreshold = System.currentTimeMillis() - 86400000
+
+            supabaseClient.from("user_profiles").select {
+                filter {
+                    // Only show users who turned ON visibility
+                    eq("is_visible_on_map", true)
+                    // Only show recent users
+                    gt("last_active_at", activeThreshold)
+                    // Don't fetch myself (I already know where I am)
+                    neq("username", currentUsername)
+                    // Ensure they actually have a location
+                    neq("latitude", -90)
+                }
+            }.decodeList<UserProfile>()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
     }
 }

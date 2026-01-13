@@ -32,12 +32,19 @@ fun MainScreen(username: String, onLogout: () -> Unit) {
             }
 
             composable("map") {
-                MapScreen()
+                MapScreen(
+                    username = username, // Pass current user for location tracking
+                    onUserClick = { clickedUsername ->
+                        println("Clicked user: $clickedUsername")
+                        // Navigate to the "View Profile" route with the clicked username
+                        //bottomNavController.navigate("profile_view/$clickedUsername")
+                    }
+                )
             }
 
             // TAB 3: Events
             composable(BottomNavItem.Events.route) {
-                //EventsScreen()
+                //
             }
 
             // TAB 4: Profile

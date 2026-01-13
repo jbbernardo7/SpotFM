@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
+import pt.ismai.lastfmlogin.data.model.Scrobble
 import pt.ismai.lastfmlogin.data.model.UserProfile
 import pt.ismai.lastfmlogin.data.network.Supabase
 import pt.ismai.lastfmlogin.data.repository.AuthRepository
@@ -15,7 +16,10 @@ import pt.ismai.lastfmlogin.data.repository.UserRepository
 
 sealed class ProfileState {
     object Loading : ProfileState()
-    data class Success(val profile: UserProfile) : ProfileState()
+    data class Success(
+        val profile: UserProfile,
+        val scrobbles: List<Scrobble> // <--- Added this
+    ) : ProfileState()
     object Error : ProfileState()
 }
 
@@ -27,9 +31,14 @@ class ProfileViewModel(private val repository: UserRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val profile = repository.fetchUserProfileFromDatabase(username)
+                val scrobbles = try {
+                    repository.getUserScrobbles(username)
+                } catch (e: Exception) {
+                    emptyList()
+                }
 
                 state = if (profile != null) {
-                    ProfileState.Success(profile)
+                    ProfileState.Success(profile, scrobbles)
                 } else {
                     ProfileState.Error
                 }
@@ -47,12 +56,15 @@ class ProfileViewModel(private val repository: UserRepository) : ViewModel() {
             try {
                 // 1. Force API Update
                 repository.fetchAndUpsertUserProfile(username)
+                repository.refreshUserScrobbles(username)
 
                 // 2. Reload the UI with the new data from DB
                 fetchProfile(username)
             } catch (e: Exception) {
                 // Handle error (maybe show a Snackbar)
                 e.printStackTrace()
+                // If refresh fails, try to just load what we have
+                fetchProfile(username)
             }
         }
     }

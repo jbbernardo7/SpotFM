@@ -4,6 +4,7 @@ package pt.ismai.lastfmlogin.data.network
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import pt.ismai.lastfmlogin.data.model.LoginResponse
+import pt.ismai.lastfmlogin.data.model.RecentTracksResponse
 import pt.ismai.lastfmlogin.data.model.UserInfoResponse
 import pt.ismai.lastfmlogin.utils.Constants
 import retrofit2.Retrofit
@@ -26,6 +27,15 @@ interface LastFmApi {
         @Query("api_key") apiKey: String,
         @Query("format") format: String = "json"
     ): UserInfoResponse
+
+    @GET(".")
+    suspend fun getRecentTracks(
+        @Query("method") method: String = "user.getrecenttracks",
+        @Query("user") username: String,
+        @Query("api_key") apiKey: String,
+        @Query("limit") limit: Int = 20,
+        @Query("format") format: String = "json"
+    ): RecentTracksResponse
 }
 
 object RetrofitClient {

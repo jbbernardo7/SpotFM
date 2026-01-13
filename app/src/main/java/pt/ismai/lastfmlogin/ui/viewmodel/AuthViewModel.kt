@@ -31,7 +31,8 @@ class AuthViewModel(private val authRepository: AuthRepository,private val userR
         checkLoginStatus()
     }
     fun login() {
-        if (username.trim().isBlank() || password.trim().isBlank()) return
+        username = username.trim()
+        if (username.isBlank() || password.trim().isBlank()) return
 
         loginState = AuthState.Authenticating
 
@@ -40,10 +41,13 @@ class AuthViewModel(private val authRepository: AuthRepository,private val userR
                 val session = authRepository.fetchSessionFromLastFm(username, password)
                 authRepository.saveSession(session)
 
-                launch {
-                    userRepository.ensureUserProfileExists(username)
-                }
+                val canonicalUsername = session.name
+                val user = userRepository.fetchUserProfileFromDatabase(canonicalUsername);
 
+                if (user == null) {
+                    userRepository.fetchAndUpsertUserProfile(canonicalUsername);
+                    userRepository.refreshUserScrobbles(canonicalUsername);
+                }
                 loginState = AuthState.Authenticated(session)
             } catch (e: Exception) {
                 Log.d("DEBUG", "Login Error: ${e.message}")

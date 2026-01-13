@@ -30,5 +30,10 @@ data class UserProfile(
     val real_name: String?,
     val country: String?,
     val playcount: Int,
-    val image_url: String?
+    val image_url: String?,
+
+    val is_visible_on_map: Boolean = false, // Defaults to false (Ghost Mode)
+    val last_active_at: Long? = null,       // Unix Timestamp of last activity
+    val latitude: Double? = null,           // Nullable because user might not have granted permissions yet
+    val longitude: Double? = null
 )

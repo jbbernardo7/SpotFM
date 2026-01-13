@@ -5,11 +5,13 @@ import pt.ismai.lastfmlogin.data.local.SessionManager
 import pt.ismai.lastfmlogin.data.network.RetrofitClient
 import pt.ismai.lastfmlogin.data.network.Supabase
 import pt.ismai.lastfmlogin.data.repository.AuthRepository
+import pt.ismai.lastfmlogin.data.repository.LocationRepository
 import pt.ismai.lastfmlogin.data.repository.UserRepository
 
 interface AppContainer {
     val authRepository: AuthRepository
     val userRepository: UserRepository
+    val locationRepository: LocationRepository
 }
 
 class DefaultAppContainer(context: Context) : AppContainer {
@@ -23,5 +25,9 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val userRepository by lazy {
         UserRepository(lastFmApi, supabaseClient)
+    }
+
+    override val locationRepository by lazy {
+        LocationRepository(context)
     }
 }

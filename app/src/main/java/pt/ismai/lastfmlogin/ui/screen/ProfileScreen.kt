@@ -41,9 +41,16 @@ import pt.ismai.lastfmlogin.data.model.UserProfile
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileState
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileViewModel
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 import pt.ismai.lastfmlogin.LocalAppContainer
+import pt.ismai.lastfmlogin.R
+import pt.ismai.lastfmlogin.data.model.Scrobble
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -80,9 +87,10 @@ fun ProfileScreen(
             is ProfileState.Success -> {
                 ProfileContent(
                     profile = state.profile,
+                    scrobbles = state.scrobbles,
                     showLogoutButton = showLogoutButton,
                     onLogout = onLogout,
-                    onRefresh = { viewModel.refreshProfile(username) }
+                    onRefresh = { viewModel.refreshProfile(state.profile.username) }
                 )
             }
         }
@@ -92,6 +100,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     profile: UserProfile,
+    scrobbles: List<Scrobble>,
     showLogoutButton: Boolean,
     onLogout: () -> Unit,
     onRefresh: () -> Unit
@@ -183,8 +192,9 @@ fun ProfileContent(
         LazyColumn(
             modifier = Modifier.weight(1f) // Fill remaining space
         ) {
-            items(dummyItems) { item ->
-                Card(
+            items(scrobbles) { item ->
+                ScrobbleItem(scrobble = item)
+                /*Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
@@ -194,7 +204,7 @@ fun ProfileContent(
                         text = item,
                         modifier = Modifier.padding(16.dp)
                     )
-                }
+                }*/
             }
         }
 
@@ -209,4 +219,88 @@ fun ProfileContent(
             Text("Log Out")
         }
     }
+}
+
+@Composable
+fun ScrobbleItem(scrobble: Scrobble) {
+    // Logic to detect "Now Playing"
+    val isNowPlaying = scrobble.date_uts == Long.MAX_VALUE
+
+    val cardBackgroundColor = if (isNowPlaying) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    // Optional: Change text color slightly if the background is different
+    val textColor = if (isNowPlaying) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBackgroundColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Album Art
+            AsyncImage(
+                model = scrobble.album_image ?: "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
+                contentDescription = "Album Art",
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(Color.DarkGray)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Text Info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = scrobble.track_name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = scrobble.artist_name,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1
+                )
+            }
+
+            // Timestamp or Now Playing Icon
+            if (isNowPlaying) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_equalizer), // Or use a specialized icon like "GraphicEq"
+                    contentDescription = "Now Playing",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            } else {
+                Text(
+                    text = formatScrobbleDate(scrobble.date_uts),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
+        }
+    }
+}
+
+// Helper to format timestamp
+fun formatScrobbleDate(uts: Long): String {
+    if (uts == 0L) return ""
+    val date = Date(uts * 1000) // Convert seconds to millis
+    val format = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
+    return format.format(date)
 }
