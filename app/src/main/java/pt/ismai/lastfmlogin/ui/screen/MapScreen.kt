@@ -69,6 +69,7 @@ fun MapScreen(
     val state = viewModel.state
     var selectedUser by remember { mutableStateOf<UserProfile?>(null) }
     var selectedUserSong by remember { mutableStateOf<Scrobble?>(null) }
+    var isLoadingSong by remember { mutableStateOf(false) }
 
     // Map Viewport (Camera)
     val mapViewportState = rememberMapViewportState {
@@ -105,9 +106,13 @@ fun MapScreen(
 
     LaunchedEffect(selectedUser) {
         if (selectedUser != null) {
+            isLoadingSong = true
+            selectedUserSong = null
             selectedUserSong = viewModel.getLastTrack(selectedUser!!.username)
+            isLoadingSong = false
         } else {
             selectedUserSong = null
+            isLoadingSong = false
         }
     }
 
@@ -134,7 +139,7 @@ fun MapScreen(
                         UserMapPin(
                             imageUrl = user.image_url,
                             username = user.username,
-                            //onClick = { onUserClick(user.username) }
+
                             onClick = { selectedUser = user }
                         )
                     }
@@ -197,6 +202,7 @@ fun MapScreen(
                 UserInfoCard(
                     user = user,
                     lastTrack = selectedUserSong,
+                    isLoading = isLoadingSong,
                     onClose = { selectedUser = null },
                     onViewProfile = { onUserClick(user.username) }
                 )
@@ -268,6 +274,7 @@ fun UserMapPin(
 fun UserInfoCard(
     user: UserProfile,
     lastTrack: Scrobble?,
+    isLoading: Boolean,
     onClose: () -> Unit,
     onViewProfile: () -> Unit
 ) {
@@ -356,7 +363,7 @@ fun UserInfoCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "No recent scrobbles",
+                            text = if (isLoading) "Loading..." else "No Recent Scrobbles",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray,
                             fontStyle = FontStyle.Italic

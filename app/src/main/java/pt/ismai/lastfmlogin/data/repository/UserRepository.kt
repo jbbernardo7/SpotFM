@@ -152,7 +152,7 @@ class UserRepository(
                     // Only show users who turned ON visibility
                     eq("is_visible_on_map", true)
                     // Only show recent users
-                    gt("last_active_at", activeThreshold)
+                    //gt("last_active_at", activeThreshold)
                     // Don't fetch myself (I already know where I am)
                     neq("username", currentUsername)
                     // Ensure they actually have a location
@@ -162,6 +162,30 @@ class UserRepository(
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        }
+    }
+
+    suspend fun getLastUserScrobble(username: String): Scrobble? {
+        return supabaseClient.from("scrobbles")
+            .select {
+                filter { eq("username", username) }
+                // Order by date descending (newest first)
+                order("date_uts", order = Order.DESCENDING)
+                // limit(1) ensures we only download one row
+                limit(1)
+            }
+            .decodeSingleOrNull<Scrobble>()
+    }
+
+    suspend fun updateUserBio(username: String, newBio: String) {
+        try {
+            supabaseClient.from("user_profiles").update({
+                set("bio", newBio)
+            }) {
+                filter { eq("username", username) }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

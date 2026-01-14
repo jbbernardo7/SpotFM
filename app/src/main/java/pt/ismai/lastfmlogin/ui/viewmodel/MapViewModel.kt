@@ -13,6 +13,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.launch
+import pt.ismai.lastfmlogin.data.model.Scrobble
 import pt.ismai.lastfmlogin.data.model.UserProfile
 import pt.ismai.lastfmlogin.data.repository.LocationRepository
 import pt.ismai.lastfmlogin.data.repository.UserRepository
@@ -86,19 +87,16 @@ class MapViewModel(
         viewModelScope.launch {
             state = state.copy(isVisibleOnMap = isVisible)
             // Update DB
-            // Note: You might need to add a specific function in UserRepository for just this column,
-            // or use a generic update. For now assuming we have a way to update it.
             userRepository.toggleMapVisibility(username, isVisible)
 
-            // If turning OFF, maybe clear location from DB? (Optional privacy feature)
+            // If turning OFF, maybe clear location from DB?
         }
     }*/
 
-    suspend fun getLastTrack(username: String): pt.ismai.lastfmlogin.data.model.Scrobble? {
+    suspend fun getLastTrack(username: String): Scrobble? {
         return try {
-            userRepository.refreshUserScrobbles(username);
-            val history = userRepository.getUserScrobbles(username)
-            history.firstOrNull() // The first item is usually the most recent
+            userRepository.refreshUserScrobbles(username)
+            userRepository.getLastUserScrobble(username)
         } catch (e: Exception) {
             null
         }

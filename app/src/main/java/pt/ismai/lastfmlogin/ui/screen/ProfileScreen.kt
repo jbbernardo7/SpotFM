@@ -42,8 +42,16 @@ import pt.ismai.lastfmlogin.ui.viewmodel.ProfileState
 import pt.ismai.lastfmlogin.ui.viewmodel.ProfileViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import pt.ismai.lastfmlogin.LocalAppContainer
 import pt.ismai.lastfmlogin.R
@@ -71,6 +79,8 @@ fun ProfileScreen(
 
     val state = viewModel.state
 
+    var showEditBioDialog by remember { mutableStateOf(false) }
+
     // Fetch data when the screen opens
     LaunchedEffect(username) {
         viewModel.fetchProfile(username)
@@ -90,8 +100,19 @@ fun ProfileScreen(
                     scrobbles = state.scrobbles,
                     showLogoutButton = showLogoutButton,
                     onLogout = onLogout,
-                    onRefresh = { viewModel.refreshProfile(state.profile.username) }
+                    onRefresh = { viewModel.refreshProfile(state.profile.username) },
+                    onEditBioClick = { showEditBioDialog = true }
                 )
+                if (showEditBioDialog) {
+                    EditBioDialog(
+                        currentBio = state.profile.bio ?: "",
+                        onDismiss = { showEditBioDialog = false },
+                        onSave = { newBio ->
+                            viewModel.updateBio(state.profile.username, newBio)
+                            showEditBioDialog = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -103,7 +124,8 @@ fun ProfileContent(
     scrobbles: List<Scrobble>,
     showLogoutButton: Boolean,
     onLogout: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onEditBioClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -159,6 +181,38 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "About",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (profile.bio.isNullOrBlank()) "No description yet." else profile.bio,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (profile.bio.isNullOrBlank()) Color.Gray else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            // Only show Edit button if it's MY profile
+            if (showLogoutButton) {
+                IconButton(onClick = onEditBioClick) {
+                    Icon(
+                        imageVector = Icons.Default.Create,
+                        contentDescription = "Edit Bio",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
         // --- SECTION 2: Playcount ---
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -295,6 +349,39 @@ fun ScrobbleItem(scrobble: Scrobble) {
             }
         }
     }
+}
+
+@Composable
+fun EditBioDialog(
+    currentBio: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(currentBio) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Update Description") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Tell us about yourself") },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(text) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 // Helper to format timestamp

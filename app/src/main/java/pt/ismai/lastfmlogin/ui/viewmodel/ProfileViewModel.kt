@@ -68,4 +68,23 @@ class ProfileViewModel(private val repository: UserRepository) : ViewModel() {
             }
         }
     }
+
+    fun updateBio(username: String, newBio: String) {
+        viewModelScope.launch {
+            // 1. Optimistic Update (Update UI immediately)
+            val currentState = state
+            if (currentState is ProfileState.Success) {
+                state = currentState.copy(
+                    profile = currentState.profile.copy(bio = newBio)
+                )
+            }
+
+            // 2. Save to Database
+            try {
+                repository.updateUserBio(username, newBio)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
